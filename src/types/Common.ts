@@ -11,3 +11,4 @@ export type BankOptions = {
 export type BanksMap = Map<BankId, Bank>;
 export type BankAccountsMap = Map<BankAccountId, BankAccount>;
 export type UserMap = Map<UserId, User>;
+export type UserAccountsMap = Map<UserId, BankAccountId[]>;

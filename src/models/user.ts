@@ -1,7 +1,8 @@
-import GlobalRegistry from "@/services/GlobalRegistry";
+import { v4 as uuidv4 } from "uuid";
 import { UserId, UserMap } from "@/types/Common";
 import { BankAccountId } from "@/types/Common";
 import BankAccount from "./bank-account";
+import Bank from "./bank";
 
 export default class User {
   private id: UserId;
@@ -13,10 +14,15 @@ export default class User {
     this.id = id;
     this.name = name;
     this.accountIds = accountIds;
+    for (const accountId of accountIds) {
+      const bankAccount = BankAccount.getById(accountId);
+      const bank = Bank.getById(bankAccount.getBankId());
+      bank.setUserAccount(this.id, accountId);
+    }
   }
 
   static create(name: string, accountIds: BankAccountId[]): User {
-    const id = globalThis.crypto.randomUUID();
+    const id = uuidv4();
     const user = new User(id, name, accountIds);
     User.usersMap.set(id, user);
     return user;

@@ -1,4 +1,5 @@
 import { BankAccountId, BankAccountsMap, BankId } from "@/types/Common";
+import { v4 as uuidv4 } from "uuid";
 
 export default class BankAccount {
   private id: BankAccountId;
@@ -13,7 +14,7 @@ export default class BankAccount {
   }
 
   static create(bankId: BankId, balance: number): BankAccount {
-    const id = globalThis.crypto.randomUUID();
+    const id = uuidv4();
     const bankAccount = new BankAccount(id, bankId, balance);
     BankAccount.bankAccountsMap.set(id, bankAccount);
     return bankAccount;
