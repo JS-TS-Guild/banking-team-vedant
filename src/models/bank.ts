@@ -82,12 +82,25 @@ export default class Bank {
       const account = BankAccount.getById(accountId);
       return account.getBalance() >= amount;
     });
-    if (!fromUserAccountId && this.doesAllowNegativeBalance()) {
-      fromUserAccountId = fromUserAccounts[0];
-    } else if (!fromUserAccountId) {
-      throw new Error("Insufficient funds");
+    if (!fromUserAccountId) {
+      if (this.doesAllowNegativeBalance()) {
+        fromUserAccountId = fromUserAccounts[0];
+      } else {
+        throw new Error("Insufficient funds");
+      }
     }
-    const toUserAccountId = toUserAccounts[0];
+    let toUserAccountId: BankAccountId;
+    if (fromUserId === toUserId) {
+      if (toUserAccounts.length === 1) {
+        return;
+      }
+      toUserAccountId =
+        toUserAccounts[0] === fromUserAccountId
+          ? toUserAccounts[1]
+          : toUserAccounts[0];
+    } else {
+      toUserAccountId = toUserAccounts[0];
+    }
     const fromUserAccount = BankAccount.getById(fromUserAccountId);
     const toUserAccount = BankAccount.getById(toUserAccountId);
     fromUserAccount.setBalance(fromUserAccount.getBalance() - amount);
