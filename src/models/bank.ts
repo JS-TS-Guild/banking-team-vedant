@@ -72,38 +72,37 @@ export default class Bank {
     const toUserAccounts = toBankId
       ? Bank.getById(toBankId).getUserAccounts(toUserId)
       : this.userAccountsMap.get(toUserId);
-    if (!fromUserAccounts) {
+    if (fromUserAccounts?.length === 0) {
       throw new Error("Sender does not have an account in this bank.");
     }
-    if (!toUserAccounts) {
+    if (toUserAccounts?.length === 0) {
       throw new Error("Recipient does not have an account in this bank.");
     }
-    let fromUserAccountId = fromUserAccounts.find((accountId) => {
-      const account = BankAccount.getById(accountId);
-      return account.getBalance() >= amount;
-    });
-    if (!fromUserAccountId) {
-      if (this.doesAllowNegativeBalance()) {
-        fromUserAccountId = fromUserAccounts[0];
-      } else {
-        throw new Error("Insufficient funds");
-      }
-    }
-    let toUserAccountId: BankAccountId;
     if (fromUserId === toUserId && (!toBankId || toBankId === this.id)) {
-      if (toUserAccounts.length === 1) {
-        throw new Error("Cannot transfer to the same account.");
-      }
-      toUserAccountId =
-        toUserAccounts[0] === fromUserAccountId
-          ? toUserAccounts[1]
-          : toUserAccounts[0];
-    } else {
-      toUserAccountId = toUserAccounts[0];
+      throw new Error("Cannot transfer to the same user in the same bank.");
     }
-    const fromUserAccount = BankAccount.getById(fromUserAccountId);
-    const toUserAccount = BankAccount.getById(toUserAccountId);
-    fromUserAccount.setBalance(fromUserAccount.getBalance() - amount);
+    let tempAmount = amount;
+    for (const accountId of fromUserAccounts) {
+      const account = BankAccount.getById(accountId);
+      tempAmount -= Math.min(tempAmount, account.getBalance());
+    }
+    if (tempAmount > 0) {
+      if (!this.doesAllowNegativeBalance()) {
+        throw new Error("Insufficient funds");
+      } else {
+        const account = BankAccount.getById(fromUserAccounts[0]);
+        account.setBalance(account.getBalance() - amount);
+      }
+    } else {
+      tempAmount = amount;
+      for (const accountId of fromUserAccounts) {
+        const account = BankAccount.getById(accountId);
+        const minAmount = Math.min(tempAmount, account.getBalance());
+        tempAmount -= minAmount;
+        account.setBalance(account.getBalance() - minAmount);
+      }
+    }
+    const toUserAccount = BankAccount.getById(toUserAccounts[0]);
     toUserAccount.setBalance(toUserAccount.getBalance() + amount);
   }
 }
