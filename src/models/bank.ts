@@ -90,9 +90,9 @@ export default class Bank {
       }
     }
     let toUserAccountId: BankAccountId;
-    if (fromUserId === toUserId) {
+    if (fromUserId === toUserId && (!toBankId || toBankId === this.id)) {
       if (toUserAccounts.length === 1) {
-        return;
+        throw new Error("Cannot transfer to the same account.");
       }
       toUserAccountId =
         toUserAccounts[0] === fromUserAccountId
